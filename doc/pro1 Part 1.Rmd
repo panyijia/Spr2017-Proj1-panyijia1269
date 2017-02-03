@@ -61,6 +61,22 @@ dtm <- DocumentTermMatrix(ff.all,
 ff.dtm=tidy(dtm)
 ```
 
+## Step 6 - Data analysis
+
+If we search those presidents by using shinny, we can find there are some frequently mentioned topics of different presidents.
+
++ 1913~1928 (Woodrow Wilson/Warren G. Harding)
+
+For the United States, this period means prosperity. The US became the leading super power of the world, and old empire states such as the UK, Germany or France became weaker due to the World War I. According to our research, the top word of President Wilson is “wished.” The term “wished” is easy to understand since now the European countries were involved in the war, and he had to wish for the peace. What’s more, for “politics,” “seas” and “arm” these terms, we can very easily think of the war. However, since the war did not happen on the land of the US, it seems that President Wilson did not use too strong words. When the war ended, we can see that these “war-related” terms disappeared in President Harding’s and President Coolidge’s script. In this two, the terms related to the economy or normal lives were talked most. For example, “civilization,” “tax” and “dollar.” For most Americans, this era means opportunity and wealth.
+
++ 1929~1940 (Herbert Hoover/Franklin D. Roosevelt (1st and 2st term))
+
+This era is one of the most interesting period in the history of the US. When President Hoover first came out, he focused on the 18th amendment, which prohibited the selling and consuming the alcohol and brought the US to the famous “Prohibition Era.” During this period, dealing with organized criminals caused by alcohol smuggling was the core of his speech. However, the great depression later came, and President Roosevelt used many words related to the depression, such as “helped,” “emergency,” “money” and “dark.” During the Great Depression, farmers were harmed a lot. Therefore, we can see the word such as “farm” and “epidemics” in his second speech.
+
++ 1941~1945 (Franklin D. Roosevelt (3rd and 4th term)/HerberHoover)
+
+The US was involved into the World War II. On December 1941, the attack of Japanese Navy to the Peril Harbor was emphasized by President Roosevelt. As we expect, he used words like “fire,” “die” and “dire” which are the words related to the war. More importantly, the word “democracy” was mentioned several times due to criticize the dictatorship happened in the Axis Powers.
+
 ##Step 5- Interactive visualize important words in individual speeches
 ```{r, warning=FALSE}
 library(shiny)
