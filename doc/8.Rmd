@@ -1,13 +1,13 @@
 ---
-title: "The analysis of inaugurals during 1913~1953 (part 2)"
-author: Yijia Pan/yp2424
+title: "The analysis of inaugurals during 1913~1953"
+author: "Yijia Pan/yp2424"
 output:
   html_document: default
   html_notebook: default
 ---
-# Second,analyze the features of these presidents.
 
-# 0. load the libraries
+# Part 2: Analyze the features of these presidents
+
 ```{r,include=FALSE}
 # load packages
 library("rvest")
@@ -29,7 +29,7 @@ source("../lib/plotstacked.R")
 source("../lib/speechFuncs.R")
 ```
 
-# 1. Data harvest: scrap speech URLs from <http://www.presidency.ucsb.edu/>.
+## 1. Data harvest: scrap speech URLs from <http://www.presidency.ucsb.edu/>.
 
 ```{r, message=FALSE, warning=FALSE,include=FALSE}
 ### Inauguaral speeches
@@ -92,7 +92,7 @@ for(i in seq(nrow(speech.list))) {
 }
 ```
 
-# 2. data Processing --- generate list of sentences
+## 2. data Processing --- generate list of sentences
 
 ```{r, message=FALSE, warning=FALSE}
 sentence.list=NULL
@@ -125,13 +125,13 @@ sentence.list=
 
 ```
 
-# 3.1 Data analysis --- Length of sentences
+## 3 Data analysis --- Length of sentences
 
 ```{r}
 sel.comparison=c("HarrySTruman","FranklinDRoosevelt","HerbertHoover","WoodrowWilson","WarrenGHarding")
 ```
 
-## Overview of sentence length distribution by different types of speeches. 
+### Overview of sentence length distribution by different types of speeches. 
 
 ```{r, fig.width = 6, fig.height = 6}
 sentence.list.sel=sentence.list%>%filter(type=="inaug", File%in%sel.comparison, Term==1)
@@ -153,18 +153,18 @@ beeswarm(word.count~FileOrdered,
          main="Inaugural Speeches")
 ```
 
-## Some analysis
+### Some analysis
 
 We can see from this figure, comparing with other presidents Woodrow Wilson tended to say less words. And most sentences are quite short. In constrast, Herbert Hoover tended to say more. The reason may be when Woodrow Wilson were the president, America was prosper. The US became the leading super power of the world, and old empire states became weaker due to the World War I. Therefore Herbert Hoover tended to say more to encourage the americans and make some promises.
 
-# 3.2 Data analysis --- Sentiment analysis
+## 4 Data analysis --- Sentiment analysis
 
-## Sentence length variation over the course of the speech, with emotions. 
+### Sentence length variation over the course of the speech, with emotions. 
 
 Here we used the same color theme as in the movie "Inside Out." Yellow means joy, purple means fear, red means anger, green means disgust, blue means sadness.
 
-```{r, fig.height=2.5, fig.width=2}
-par(mar=c(3,2,2,2))
+```{r, fig.height=4, fig.width=4}
+
 f.plotsent.len(In.list=sentence.list, InFile="WoodrowWilson", 
                InType="nomin", InTerm=1, President="WoodrowWilson")
 
@@ -181,7 +181,7 @@ f.plotsent.len(In.list=sentence.list, InFile="HarrySTruman",
                InType="nomin", InTerm=1, President="HarrySTruman")
 ```
 
-## The cluster of emtions of different presidents
+### The cluster of emtions of different presidents
 ```{r, fig.height=6, fig.width=6}
 presid.summary=tbl_df(sentence.list)%>%
   filter(type=="nomin", File%in%sel.comparison)%>%
@@ -210,7 +210,7 @@ fviz_cluster(km.res,
              show.clust.cent=FALSE)
 ```
 
-## Some analysis
+### Some analysis
 
 For Truman: The color of green and red are relatively high in his speech. This coincide the situation of the World War II. Disgust and Anger should be the emotions in his speech script since this shows that his disgust of the Axis Powers and the war. 
 
