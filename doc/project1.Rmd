@@ -1,6 +1,6 @@
 ---
 title: "Text Analysis about Donald Trump's Speeches"
-author: 'Author: Mengxiong Li'
+author: 'Author: Yijia Pan'
 output:
   html_document: default
   html_notebook: default
