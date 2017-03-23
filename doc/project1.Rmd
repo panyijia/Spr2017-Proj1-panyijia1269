@@ -1,25 +1,27 @@
 ---
 title: "Text Analysis about Donald Trump's Speeches"
+author: 'Author: Mengxiong Li'
 output:
-  html_notebook: default
   html_document: default
+  html_notebook: default
   pdf_document: default
 ---
 
 
-# Introduction
+# 1. Introduction
 
-One of the biggest events in last year is the presidential election. Out of many people's surprise, Donald Trump beat Hilary Clinton and was elected as the new president. At the inauguration day of Donald Trump, numerous protests and demonstrations happened in many major cities since that day was important for both Trump's supporters and opponents. However, despite the protests and demonstrations, Trump's inaugural speech gained more supports. According to a poll launched by AOL.com, 50 percent of voters liked Trump's speech. In fact, the new president's inaugural speech is an important and effective indicator of president's future policies and decisions. Therefore, in this report, we will briefly analyze each president's inaugural speech, from George Washington to Donald Trump, and then try to answer the question: To which president's inaugural speech is Donald Trump's most similar. In the last, we will extend our research to analyze the difference between Donald Trump's and Hilary Clinton's nomination speech. 
+One of the biggest events in last year is the presidential election. Out of many people's surprise, Donald Trump beat Hilary Clinton and was elected as the new president. At the inauguration day of Donald Trump, numerous protests and demonstrations happened in many major cities since that day was important for both Trump's supporters and opponents. However, despite the protests and demonstrations, Trump's inaugural speech gained more approvals. According to a poll launched by AOL.com, 50 percent of voters liked Trump's speech. In fact, the new president's inaugural speech is an important and effective indicator of president's future policies and decisions. Therefore, in this report, we will briefly analyze each president's inaugural speech, from George Washington to Donald Trump, and then try to answer the question: To which president's inaugural speech is Donald Trump's most similar. In the last, we will extend our research to additional three points. The first is to analyze the difference between Donald Trump's and Hilary Clinton's nomination speeches, and the second is to analyze the topics in the presidential inaugural speeches by using text mining method. The last is to compare the topics in Donald Trump's and Hilary Clinton's nomination speeches also by using text mining method.  
 
-# Preparation
+# 2. Preparation
 
 #### Check and install needed packages. Load the libraries and functions. 
+
 ```{r, message=FALSE, warning=FALSE}
 packages.used=c("rvest", "tibble", "qdap", 
                 "sentimentr", "gplots", "dplyr",
                 "tm", "syuzhet", "factoextra", 
                 "beeswarm", "scales", "RColorBrewer",
-                "RANN", "tm", "topicmodels","wordcloud")
+                "RANN", "tm", "topicmodels","wordcloud","tidytext","plotly","ggplot2","qdap","plotrix")
 
 # check packages that need to be installed.
 packages.needed=setdiff(packages.used, 
@@ -56,18 +58,14 @@ library("plotrix")
 source("../lib/plotstacked.R")
 source("../lib/speechFuncs.R")
 ```
-This notebook was prepared with the following environmental settings.
-```{r}
-print(R.version)
-```
 
-# Data Harvest
+# 3. Data Harvest
 
-#### Step 1: Scraping speech URLs from <http://www.presidency.ucsb.edu/>.
+### Step 1: Scraping speech URLs from <http://www.presidency.ucsb.edu/>.
 
-Following the example of [Jerid Francom](http://francojc.github.io/web-scraping-with-rvest/), we used [Selectorgadget](http://selectorgadget.com/) to choose the links we would like to scrap. For this project, we selected all inaugural addresses of past presidents and nominal addresses of Hilary Clinton and Donald Trump. 
+In following the example of [Jerid Francom](http://francojc.github.io/web-scraping-with-rvest/), we used [Selectorgadget](http://selectorgadget.com/) to choose the links we would like to scrap. For this project, we selected all inaugural addresses of past presidents and nominal addresses of Hilary Clinton and Donald Trump. 
 
-```{r, message=FALSE, warning=FALSE,results='hide'}
+```{r, message=FALSE, warning=FALSE,results="hide"}
 ### Inauguaral speeches
 main.page <- read_html(x = "http://www.presidency.ucsb.edu/inaugurals.php")
 # Get link URLs
@@ -82,7 +80,7 @@ main.page=read_html("http://www.presidency.ucsb.edu/nomination.php")
 nomin <- f.speechlinks(main.page)
 ```
 
-#### Step 2: Using speech metadata posted on <http://www.presidency.ucsb.edu/>.
+### Step 2: Using speech metadata posted on <http://www.presidency.ucsb.edu/> and Scraping the texts of speeches from the speech URLs.
 
 ```{r}
 inaug.list=read.csv("../data/inauglist.csv", stringsAsFactors = FALSE)
@@ -91,7 +89,7 @@ nomin.list=read.csv("../data/nominlist.csv",stringsAsFactors = FALSE)
 
 We assemble all scrapped speeches into one list. Note here that we don't have the full text yet, only the links to full text transcripts. 
 
-#### Step 3: Scraping the texts of speeches from the speech URLs.
+### Step 3: Scraping the texts of speeches from the speech URLs.
 
 ```{r}
 speech.list<-rbind(inaug.list,nomin.list)
@@ -100,7 +98,7 @@ speech.url=rbind(inaug,nomin)
 speech.list=cbind(speech.list, speech.url)
 ```
 
-Based on the list of speeches, I scrap the main text part of the transcript's html page. For simple html pages of this kind,  [Selectorgadget](http://selectorgadget.com/) is very convenient for identifying the html node that `rvest` can use to scrap its content. 
+Based on the list of speeches, we scrap the main text part of the transcript's html page. For simple html pages of this kind,  [Selectorgadget](http://selectorgadget.com/) is very convenient for identifying the html node that `rvest` can use to scrap its content. 
 
 ```{r}
 # Loop over each row in speech.list
@@ -121,9 +119,9 @@ for(i in seq(nrow(speech.list))) {
 }
 ```
 
-# First Part: What Has Past presidents Said?
+# 4. What Has the Past Presidents Said?
 
-Here, we first conduct a preliminary research on what the most frequently mentioned words are in the presidential inaugural speech. In order to make the analysis more practical, stop words such as "I", "am" and punctuation are removed. Then, the top 10 words are presented below. 
+Here, we first conduct a preliminary research on what the most frequently mentioned words are in the presidential inaugural speeches. In order to make the analysis more practical, stop words such as "I", "am" and punctuation are removed. Then, the top 10 words are presented below. 
 
 ## Step 1: Generate the corpus of all speeches, clean data and turn the corpus into matrix.
 
@@ -147,9 +145,9 @@ ff.matrix<-as.matrix(tdm.all)
 
 ## Step 2: What are the 10 most frequently used words?
 
-The most frequent word that presidents will mention in his speech is "will." This can be explained easily since the president always talked about what kind of policies and ideology he would use during the following four-year term. What's more, other words such as "must" and "can" are also mentioned frequently. These words (will, must and can) are usually called modal verbs, which means that they are used to indicate modality. More preciously, these words can express a feeling of necessity and possibility to the listeners, and this is exactly what a new president want to deliver. By using these modal verbs, a new president can not only build his authority, but also draw a possible beautiful picture to his supporters. Furthermore, as a world leader and the president of the United States, new presidents also love to use words such as "world", "America", "people" and"American." The frequent usage of these words shows that a new president tend to demonstrate his leadership of both American people and the Free World.  
+The most frequent word that presidents will mention in their speeches is "will." This can be explained easily since the presidents always talked about what kind of policies and ideology they would use during the following four-year term. What's more, other words such as "must" and "can" are also mentioned frequently. These words (will, must and can) are usually called modal verbs, which means that they are used to indicate modality. More preciously, these words can express a feeling of necessity and possibility to the listeners, and this is exactly what a new president want to deliver. By using these modal verbs, a new president can not only build his authority, but also draw a possible beautiful picture to his supporters. Furthermore, as a world leader and the president of the United States, the new president also love to use words such as "world", "America", "people" and"American." The frequent usage of these words shows that a new president tends to demonstrate his leadership of both American people and the Free World.  
 
-```{r,fig.width=8,fig.height=5}
+```{r,fig.width=7.8,fig.height=6}
 term_frequency<-rowSums(ff.matrix)
 term_frequency<-sort(term_frequency,decreasing = TRUE)[1:10]
 plot_ly(x=names(term_frequency[order(term_frequency,decreasing = TRUE)]),y=sort(term_frequency,decreasing = TRUE),type="bar")
@@ -157,9 +155,9 @@ plot_ly(x=names(term_frequency[order(term_frequency,decreasing = TRUE)]),y=sort(
 
 ## Step 3: Inspect an overall wordcloud
 
-In the wordcloud, the size of the words represents the frequency it has been mentioned in the speeches. When the word are used frequently in speeches, the size of it will be large. 
+In the wordcloud, the size of the words represents the frequency it has been mentioned in the speeches. When the words are used frequently in speeches, the size of it will be large. 
 
-```{r, fig.height=2.5, fig.width=2.5}
+```{r, fig.height=6.5, fig.width=6.5,warning=FALSE}
 wordcloud(tdm.overall$term, tdm.overall$`sum(count)`,
           scale=c(5,0.5),
           max.words=100,
@@ -171,13 +169,13 @@ wordcloud(tdm.overall$term, tdm.overall$`sum(count)`,
           colors=brewer.pal(9,"Blues"))
 ```
 
-# Which President will Donald Trump be Most Like?
+# 5. Which President will Donald Trump be Most Like?
 
-Donald Trump brought numerous controversial topics to the United States. While having millions of supporters especially among "Middle America States," Donald Trump also has countless opponents who dislike his new policies. In fact, due to his new policies and behaviors on his Twitter account, many people are interested in the new president's personality. However, it is hard to analyze people's personality since human-beings are complex. Therefore, we choose to do analysis on the emotions Donald Trumps expressed in his inaugural speech by using reliable statistical method. Furthermore, we will compare his emotion in the speech with other presidents' and find that which presidential inaugural speech that Donald Trump's will be most similar to.
+Donald Trump brought numerous controversial topics to the United States. While having millions of supporters especially among the "Middle America States," Donald Trump also has countless opponents who dislike his new policies. In fact, due to his new policies and behaviors on his Twitter account, many people are interested in the new president's personality. However, it is hard to analyze people's personality since human-beings are complex. Therefore, we choose to do analysis on the emotions Donald Trumps expressed in his inaugural speech by using reliable statistical method. Furthermore, we will compare his emotion in the speech with other presidents' and find that which presidential inaugural speech that Donald Trump's will be most similar to.
 
-According to several research reports, "Andrew Jackson", "James K. Polk",  "Lyndon B. Johnson" and "Ronald Reagan" are elected as candidates that President Trump might be most similar to due to their similar experience, policies or claims. Therefore, the following analysis will be mainly focus on these five presidents and President Trump.
+According to several research reports, "Andrew Jackson", "James K. Polk",  "Lyndon B. Johnson" and "Ronald Reagan" are elected as candidates that President Trump might be most similar to due to their similar experience, policies or claims. Therefore, the following analysis will be mainly focus on these four presidents and President Trump.
 
-## Step 1: Data Processing --- generate list of sentences
+## Step 1: Data processing --- generate list of sentences
 
 We will use sentences as units of analysis for this project, as sentences are natural language units for organizing thoughts and ideas. We assign an sequential id to each sentence in a speech (`sent.id`) and also calculated the number of words in each sentence as *sentence length* (`word.count`).
 
@@ -205,24 +203,24 @@ for(i in 1:nrow(speech.list[])){
 ```
 
 Some non-sentences exist in raw data due to erroneous extra end-of sentence marks. 
+
 ```{r}
 sentence.list=
   sentence.list%>%
   filter(!is.na(word.count)) 
-
 ```
 
 ## Step 2: Data analysis --- length of sentences
 
-Before starting to compare Donald Trump's emotion with other presidents, we first do some analysis on the length of inaugural speeches.
+We use two methods to compare those presidents with Donald Trump based on their inaugural speeches. Becasue they live in different ages. The topic they pay attention to might be quite different. However, we can assume that regardless of era, emotions of presidents can be expressed through their speeches and language styles. Therefore, we will analyze the length of their sentences and the emotions in each sentences. Now, Here is the analysis on the length of inaugural speeches.
 
-### Overview of sentence length distribution of Inaugural speeches
+### Overview of sentence length distribution of inaugural speeches
 
-This picture shows the sentence length of Inaugural speeches for each president. Each point in the plot represent the number of words in a single sentence in the presidential inaugural speech. If most points cluster at the left side, it means that the sentence length tends to short. However, if the points are distributed kind of evenly or cluster at the right side, it means that many the length of sentences is probably long. 
+This picture shows the sentence length of inaugural speeches for each president. Each point in the plot represents the number of words in a single sentence in the presidential inaugural speech. If most points cluster at the left side, it means that most of the sentences' lengths in this speech tends to be short. However, if the points are distributed kind of evenly or cluster at the right side, it means that the lengths of sentences are probably long. 
 
-The first interesting finding is that President Trump's sentence length is the second shortest among all presidents, and only President Bush, also a Republican President, has shorter sentence than him. What's more, presidents in the early era (18 & 19th century) such as Andrew Jackson and James K. Polk tend to have longer sentence length, compared with presidents such as Donald Trump, Lyndon B. Johnson and Ronald Reagan. In conclusion, according to this result, we may first expect that Donald Trump may be similar to Lyndon B. Johnson and Ronald Reagan first. 
+The first interesting finding is that President Trump's sentence length is the quite short among all presidents. And he also has fewer extremely long sentences. However, presidents in the early era (18 & 19th century) such as Andrew Jackson and James K. Polk tend to have longer sentence, compared with presidents such as Donald Trump, Lyndon B. Johnson and Ronald Reagan. In conclusion, according to this result, we may first expect that Donald Trump's language style may be similar to Lyndon B. Johnson and Ronald Reagan. At the same time, we can also observe that Andrew Jackson's points are quite sparse, which means that his speeches may just contain a small number of long sentences.
 
-```{r, fig.width = 3, fig.height = 3}
+```{r, fig.width = 7, fig.height = 7}
 sentence.list.sel<-sentence.list%>%filter(Term=="1",type=="inaug")
 sentence.list.sel$File=factor(sentence.list.sel$File)
 
@@ -242,23 +240,22 @@ beeswarm(word.count~FileOrdered,
          main="Inaugural Speeches")
 ```
 
-
 ## Step 3: Data analysis --- sentiment analysis
 
-For each extracted sentence, we apply sentiment analysis using [NRC sentiment lexion](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm). "The NRC Emotion Lexicon is a list of English words and their associations with eight basic emotions (anger, fear, anticipation, trust, surprise, sadness, joy, and disgust) and two sentiments (negative and positive). The annotations were manually done by crowdsourcing." 
+Another method used was sentiment analysis. For each extracted sentence, we apply sentiment analysis using [NRC sentiment lexion](http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm). The NRC Emotion Lexicon is "a list of English words and their associations with eight basic emotions (anger, fear, anticipation, trust, surprise, sadness, joy, and disgust) and two sentiments (negative and positive). The annotations were manually done by crowdsourcing." 
 
 ### Overview of clustering of emotions
 
-In this figure we can find that "fear","anger","disgust","sadness" seems to cluster into one group and we can call it negative emotions. "Anticipation","surprise","joy","trust" seems to cluster into another group and we can call it positive emotions.
+In this figure we group all emotions in presidents' speeches. We can see that "fear","anger","disgust","sadness" seems to cluster into one group and we can call it negative emotions. "Anticipation","surprise","joy","trust" seems to cluster into another group and we can call it positive emotions.
 
-```{r, fig.width=2, fig.height=2}
+```{r, fig.width=7, fig.height=7}
 heatmap.2(cor(sentence.list%>%filter(type=="inaug")%>%select(anger:trust)), 
           scale = "none", 
           col = bluered(100), , margin=c(6, 6), key=F,
           trace = "none", density.info = "none")
 ```
 
-### Overview of Emotions in the Presidents' Inaugural Speeches
+### Overview of emotions in the presidents' inaugural speeches
 
 The following chart provides the overall view of emotions in the presidents' inaugural speeches. As we can see in this figure, most emotions in inaugural speeches are positive, such as trust, anticipation and joy. 
 ```{r}
@@ -270,36 +267,39 @@ col.use=c("red2", "darkgoldenrod1",
 barplot(overall.emo[order(overall.emo)], las=2, col=col.use[order(overall.emo)], horiz=T, main="Inaugural Speeches")
 ```
 
-### Individual emotions---comparing Donald Trump with other three similiar presidents.
+### Individual emotions---comparing Donald Trump with other four similiar presidents.
 
-The following chart represents different sentences of each presidents' speech. One line represents one sentence. The length of the line represents the length of each sentence. The color of the line represents the emotion of this sentence. Like the figure above. The yellow represents the positive emotions, like "trust","anticipation","joy" and "surprise". Red represents "anger", purple represents the "fear", blue represents "sadness" and green represents "disgust". 
+#### Emotions through the whole speeches.
 
-From these chart, we can see that the chart for Donald Trump is very colorful, which means that there are many emotions existing in his inaugural speech. What's more, the emotion of anger in his speech happens more frequently, compared to in other presidential inaugural speeches. It is noteworthy that the emotion of Andrew Jackson is kind of sparsity due to the fact that the number of words in his speech is fewer than in other presidents' speeches (only containing 1829 words while others are around 3000 words) and at the same time there are some sentence that are very long. So he has fewer lines than other presidents. However, we can see that most of the lines in his speech are yellow, it represents that he has more positive emotions. Due to these reasons, first we expect that the emotion of Donald Trump is similar to Ronald Reagan, James K. Polk and Lyndon Johnson. Then we can use other figures to see if this assumpation is right.
+Now, after observing all presidents' emotions, we begin to analyze five presidents’ emotions who we compare before respectively. The following chart displays sentences of each presidents' speech. One line represents one sentence. The length of the line represents the length of each sentence. The color of the line represents the emotion of this sentence. Like the figure above. The yellow represents the positive emotions, like "trust", "anticipation", "joy" and "surprise". Red represents "anger", purple represents the "fear", blue represents "sadness" and green represents "disgust." 
 
-```{r, fig.height=2, fig.width=2}
+From these chart, we can see that the chart for Donald Trump is very colorful, which means that there are many emotions existing in his inaugural speech. What's more, the emotion of anger in his speech happens more frequently, compared to in other presidential inaugural speeches. It is noteworthy that the lines of Andrew Jackson are kind of sparse. It's because that the number of words in his speech is fewer than in other presidents' speeches (only containing 1829 words while others are around 3000 words), and at the same time some of his sentences are very long. Therefore, he has fewer lines than other presidents. We can also see that most of the lines in his speech are yellow, it represents that he has more positive emotions. According to these figures we expect that in terms of the length of sentences, the number of words and the emotions, Donald Trump is similar to Lyndon Johnson. 
+
+```{r,fig.height=9, fig.width=11}
 par(mfrow=c(3,2), mar=c(1,0,2,0), bty="n", xaxt="n", yaxt="n", font.main=1)
 
 f.plotsent.len(In.list=sentence.list, InFile="DonaldJTrump", 
                InType="inaug", InTerm=1, President="Donald Trump")
-# 
-f.plotsent.len(In.list=sentence.list, InFile="AndrewJackson", 
-               InType="inaug", InTerm=1, President="Andrew Jackson")
-# 1829
-f.plotsent.len(In.list=sentence.list, InFile="RonaldReagan", 
-               InType="inaug", InTerm=1, President="Ronald Reagan")
-# 2427
-f.plotsent.len(In.list=sentence.list, InFile="JamesKPolk", 
-               InType="inaug", InTerm=1, President="James K. Polk")
-# 4809
 
 f.plotsent.len(In.list=sentence.list, InFile="LyndonBJohnson", 
                InType="inaug", InTerm=1, President="Lyndon B. Johnson")
 
+f.plotsent.len(In.list=sentence.list, InFile="RonaldReagan", 
+               InType="inaug", InTerm=1, President="Ronald Reagan")
+
+f.plotsent.len(In.list=sentence.list, InFile="JamesKPolk", 
+               InType="inaug", InTerm=1, President="James K. Polk")
+
+f.plotsent.len(In.list=sentence.list, InFile="AndrewJackson", 
+               InType="inaug", InTerm=1, President="Andrew Jackson")
+
 ```
 
-In the following chart, we quantify the scale of emotions and improve the visualization of the emotion chart. According to this chart, the components and the ratio of emotions are highly similar between James K. Polk's , Lyndon B. Johnson's, and Ronald Reagan's speeches. However, in both Donald Trump's and Andrew Jackson's speeches, there is significant difference in emotions compared to the other three presidents. As we found before, thought Andrew Jackson's speeches is short but his emotions are very intense, especially the positive emotions. Donald Trump seems have fewer emotions in his speech, but his ratio are similiar to Andrew Jackson regardless of the whole amount. Therefore, in order to analyze their similiarities in terms of their emotions, we still should use the cluster method to do group them more directly and clearly. 
+#### Average the emotions 
 
-```{r,fig.width=10,fig.height=5}
+In the following chart, we pay more attention to the emotions of presidents alone. We quantify the scale of emotions and improve the visualization of the emotion chart. According to this chart, the components and the ratio of emotions are highly similar between Lyndon B. Johnson's and Ronald Reagan's speeches. As for other three presidents. Donald Trump seems to have fewer emotions in his speech. However, we can find that the ratio of negative emotions of Donald Trump's speech are higher than other presidents. That's the reason why his figure is more colorful. What's more, as we mentioned before, though Andrew Jackson's speech is short but his emotions are very intense, especially the positive emotions. Therefore, if we consider the negative emotions, Donald Trump is similar to Andrew Jackson, and if we consider the positive emotions, then Donald Trump may be more like Ronald Regan. So based on this figure, it seems that it is hard for us to identity which president Donald Trump is similar to most. Therefore, we chose to use a cluster method to do group them into groups based on their emotion features, which can be more directly and clearly.
+
+```{r,fig.width=8,fig.height=4}
 trump.emo<-colMeans(sentence.list%>%filter(President=="Donald J. Trump")%>%select(anger:trust)>0.01)
 andrew.emo<-colMeans(sentence.list%>%filter(President=="Andrew Jackson")%>%select(anger:trust)>0.01)
 ronald.emo<-colMeans(sentence.list%>%filter(President=="Ronald Reagan")%>%select(anger:trust)>0.01)
@@ -322,9 +322,11 @@ p
 
 #### Cluster presidents according to their emotions in inaugral speeches.
 
-The following chart reveals the cluster of presidents' emotions in their inaugural speeches by using KNN method. K-nearest neighbors algorithm (k-NN) is a non-parametric method used for classification. By setting K values, we can group those president into K groups based on their features. I try K=2, K=3, K=4 and K=5, and I find that Andrew Anderson will always be clustered with Donald Trump. This represents that Donald Trump's emtions are very similiar to Andrew Anderson. It might be different from what we observed from the figures above. However, we can Since KNN method provides more reliable results than simple visualization, we will change our expectation and now our expectation is that the emotions in the President Trump's speech are most similar to President Jackson's. 
+The following chart reveals the cluster of presidents' emotions in their inaugural speeches by using KNN method. K-nearest neighbors’ algorithm (k-NN) is a non-parametric method used for classification. By setting K values, we can group these presidents into K groups based on their features. We tried K=2, K=3 and K=4, and found that Andrew Anderson will always be clustered with Donald Trump through K equals from 1 to 5. And when K=1 and 2, Andrew Anderson and Donald Trump will in a same group with Ronald Reagan. However, these three presidents are always in different groups with James Polk and Lyndon Johnson. This represents that Donald Trump's emotions in his speech are most similar to Andrew Anderson's and kind of similar to Ronald Reagan's. This result follows to what we've analyzed before, and KNN method provides us with a clearer result than simple visualization.
 
-```{r, fig.height=3.3, fig.width=3.7}
+In fact, both Donald Trump and Andrew Anderson were considered "unfit" in the government. They were both described as abrasive and even vulgar by their opponents. What's more, they were extremely loyal to their controversial advisers and made some controversial decisions during their presidency term. Therefore, these facts confirm our statistical findings.
+ 
+```{r, fig.height=7, fig.width=7}
 presid.summary=tbl_df(sentence.list)%>%
   filter(type=="inaug")%>%
   #group_by(paste0(type, File))%>%
@@ -346,20 +348,20 @@ presid.summary=tbl_df(sentence.list)%>%
 presid.summary=as.data.frame(presid.summary)
 rownames(presid.summary)=as.character((presid.summary[,1]))
 km.res=kmeans(presid.summary[,-1], iter.max=200,
-              5)
+              4)
 fviz_cluster(km.res, 
              stand=F, repel= TRUE,
              data = presid.summary[,-1], xlab="", xaxt="n",
              show.clust.cent=FALSE)
 ```
 
-# Difference between Donald Trump's and Hilary Clinton's Nomination Speeches
+# 6. Difference between Donald Trump's and Hilary Clinton's Nomination Speeches
 
-Now, we will extend the research topic to analyze the difference of nomination speeches between Donald Trump and Hilary Clinton. Hilary Clinton is a politician who is famous for her diplomatic experience, feminism thoughts and her husband. In fact, she was considered as the most likely candidate who would win the 2016 presidential election. However, the truth is Donald Trump won the election out of many people's surprise. Therefore, it is interesting to examine what happened during the process of election, and the topic we will analyze on is the nomination speeches of Hilary Clinton's and Donald Trump's. Nomination speeches are used when the candidates accept the nomination for the presidency from his/her party. The first thing we do is that we list the first twenty-five words that most in common in both Trump's and Hilary's speeches. Then we use Word Cloud to compare these common used words in both speeches. 
+Now, we will extend the research topic to analyze the difference of nomination speeches between Donald Trump and Hilary Clinton. Hilary Clinton is a politician who is famous for her diplomatic experience, feminism thoughts and her husband. In fact, she was considered as the most likely candidate who would win the 2016 presidential election. However, the truth is Donald Trump won the election out of many people's surprise. Therefore, it is interesting to examine what happened during the process of election, and the topic we will analyze on is the nomination speeches of Hilary Clinton's and Donald Trump's. Nomination speeches are used when the candidates accept the nomination for the presidency from their parties. 
 
-## Common wordcloud and comparsion wordcloud
+## Step 1: Common wordcloud and comparsion wordcloud
 
-In this chart, we can see that both Donald Trump and Hilary Clinton mention words related to promises in the future such as "will", "going" and "can." Especially for Donald Trump, the frequency for him to use "will" is much more than that of Hilary Clinton. In order to analyze this closer, we make a Word Cloud for the comparison. 
+### Generating the corpus
 
 ```{r}
 all.trump<-speech.list%>%filter(President=="Donald J. Trump", type=="nomin")%>%select(fulltext)
@@ -377,7 +379,11 @@ colnames(all_tdm)<-c("Donald J. Trump","Hilary Clinton")
 all_m<-as.matrix(all_tdm)
 ```
 
-```{r}
+### Common the wordcloud
+
+The first thing we do is that we list the most frequently used 100 words that both in Trump's and Hilary's speeches. In this chart we can see that both Donald Trump and Hilary Clinton mention words related to the promises in the future such as "will", "going" and "can." 
+
+```{r,fig.height=5.8,fig.width=5.8,warning=FALSE}
 commonality.cloud(all_m,max.words = 100,colors="steelblue1")
 common_words <- subset(all_m, all_m[, 1] > 0 & all_m[, 2] > 0)
 difference<-abs(common_words[,1]-common_words[,2])
@@ -386,21 +392,28 @@ common_words<-common_words[order(common_words[,3],decreasing = T),]
 top25_df<-data.frame(x=common_words[1:25,1],
                      y=common_words[1:25,2],
                      labels=rownames(common_words[1:25,]))
+```
+
+### Different frequencies among common words
+
+Although these are the words they both mentioned, the frequency they used these words might be different. Therefore, we generate another chart to compare the top 25 words they use in common with their different frequencies. We can observe in this chart, for Donald Trump, the frequency to use "will" is much more than Hilary Clinton does.  
+
+```{r,fig.height=7,fig.width=11}
 library(plotrix)
 pyramid.plot(top25_df$x,top25_df$y,labels=top25_df$labels,gap=8,top.labels=c("Donald J. Trump","Words","Hillary Clinton"),main="Words in Common",laxlab=NULL,raxlab=NULL,unit=NULL)
 ```
 
+### Comparison the wordcloud
 
-The following graph is the Word Cloud Comparison between Donald Trump and Hilary Clinton. As mentioned before, Donald Trump frequently used "will" in his speech. What's more, some thrilling words such as "terrorism" and "violence" appear more frequently in Donald Trump's speech. It seems that Trump's speech strategy was to heighten the listeners' concerns of the potential dangers in the US. It is noteworthy that many words appear in the world cloud for Donald Trump is more detailed and policies-related. In other words, Donald Trump loved to directly mention his specific future plans in his nomination speech. However, it seems that Hilary loved using more general terms such as "people", "rights" and "family" in her speech. There was not many detail explanation of her policies or plans in her speech.   
+The following graph is the Word Cloud Comparison between Donald Trump and Hilary Clinton. It is opposite from the word cloud before, which shows the words they both mentioned. In this chart, words that are mentioned only by one presidents are presented on each side. As mentioned before, Donald Trump frequently used "will" in his speech. What's more, some thrilling words such as "terrorism" and "violence" appear more frequently in Donald Trump's speech. It seems that Trump's speech strategy was to heighten the listeners' concerns of the potential dangers in the US. It is noteworthy that many words appear in the world cloud for Donald Trump are more detailed and policies-related. In other words, Donald Trump loved to directly mention his specific future plans in his nomination speech. However, it seems that Hilary loved using more general terms such as "people", "rights" and "family" in her speech. There were not many detail explanations of her policies or plans in her speech.
 
-```{r}
+```{r,fig.height=5,fig.width=8,warning=FALSE}
 comparison.cloud(all_m,colors = c("orange","blue"),max.words = 50)
 ```
 
-## topic modelling---using text mining
+## Step 2: Topic modelling---using text mining
 
 For topic modeling, we prepare a corpus of sentence snipets as follows. For each speech, we start with sentences and prepare a snipet with a given sentence with the flanking sentences. 
-
 ```{r}
 corpus.list=sentence.list[2:(nrow(sentence.list)-1), ]
 sentence.pre=sentence.list$sentences[1:(nrow(sentence.list)-2)]
@@ -413,6 +426,7 @@ docs <- Corpus(VectorSource(corpus.list$snipets))
 ```
 
 ### Text basic processing
+
 Adapted from <https://eight2late.wordpress.com/2015/09/29/a-gentle-introduction-to-topic-modeling-using-r/>.
 
 ```{r}
@@ -446,10 +460,10 @@ corpus.list=corpus.list[rowTotals>0, ]
 
 ### Run LDA
 
-```{r}
+```{r,warning=FALSE}
 #Set parameters for Gibbs sampling
 burnin <- 4000
-iter <- 2000
+iter <- 500
 thin <- 500
 seed <-list(2003,5,63,100001,765)
 nstart <- 5
@@ -498,8 +512,11 @@ colnames(topicProbabilities)=topics.hash
 corpus.list.df=cbind(corpus.list, topicProbabilities)
 ```
 
-## Clustering of topics
-```{r, fig.width=2, fig.height=2}
+### Clustering of topics
+
+This chart is for the analysis of topics mentioned in presidential speeches. On the vertical axis, all presidents' names are listed and these names are clustered according to the similarity of their inaugural speeches topics. It is interesting to find that Ronald Reagan's topics are similar to Donald Trump's since they are clustered together. On the horizontal axis, the topic names are listed and clustered. Equality and Unity are grouped as one cluster. Working Family and Government are also grouped as another group. The basis for clustering the topics is that if the possibility of two topics appearing in a sentence simultaneously is high, then they can be grouped together. As a result, it seems that equality and unity may appear together in the same sentences, and working family and government may appear together.
+
+```{r, fig.width=8, fig.height=8}
 par(mar=c(1,1,1,1))
 topic.summary=tbl_df(corpus.list.df)%>%
               filter(type%in%c("inaug"))%>%
@@ -515,7 +532,6 @@ rownames(topic.summary)=topic.summary[,1]
 # [13] "Equality"        "Misc"            "Legislation"       
 
 topic.plot=c(1, 13, 9, 11, 8, 3, 7)
-print(topics.hash[topic.plot])
 
 heatmap.2(as.matrix(topic.summary[,topic.plot+1]), 
           scale = "column", key=F, 
@@ -523,32 +539,32 @@ heatmap.2(as.matrix(topic.summary[,topic.plot+1]),
           cexRow = 0.9, cexCol = 0.9, margins = c(8, 8),
           trace = "none", density.info = "none")
 ```
-### The topic of Hilary Clinton and Donald Trump.
-```{r, fig.width=3.3, fig.height=3.3}
+
+### The topics of Hilary Clinton and Donald Trump.
+
+Now, we will compare the topics of Hilary Clinton and Donald Trump. As mentioned before, in the nomination speeches, both president candidates discussed their futures policies and plans. Therefore, by comparing the topics they talked, we can know what kind of aspect of event they were most interested in respectively.
+
+The following chart reveals the relative ratio of topics in the sentences of both president candidates. Each specific color represents a topic, and if the area of a specific color in one candidate's chart is larger than in another's, then it means that the topic of the first candidate has higher ratio of mentioning in the sentence. Based on the chart, we can see that the ratio of "economy"" in Donald Trump's speech sentences is much higher than that of Clinton's. What's more, Donald Trump's ratio of mentioning "freedom" is also larger than Clinton's. 
+
+```{r, fig.width=8, fig.height=6.5}
 # [1] "Economy"         "America"         "Defense"         "Belief"         
 # [5] "Election"        "Patriotism"      "Unity"           "Government"     
 # [9] "Reform"          "Temporal"        "WorkingFamilies" "Freedom"        
 # [13] "Equality"        "Misc"            "Legislation"       
 
-
-par(mfrow=c(1, 2), mar=c(1,1,2,0), bty="n", xaxt="n", yaxt="n")
-
-
 topic.plot=c(1, 13, 14, 15, 8, 9, 12)
-print(topics.hash[topic.plot])
 
-speech.df=tbl_df(corpus.list.df)%>%filter(File=="DonaldJTrump", type=="inaug")%>%select(sent.id, Economy:Legislation)
+speech.df=tbl_df(corpus.list.df)%>%filter(File=="DonaldJTrump", type=="nomin",Term=="1")%>%select(sent.id, Economy:Legislation)
 speech.df=as.matrix(speech.df)
 speech.df[,-1]=replace(speech.df[,-1], speech.df[,-1]<1/15, 0.001)
 speech.df[,-1]=f.smooth.topic(x=speech.df[,1], y=speech.df[,-1])
 plot.stacked(speech.df[,1], speech.df[,topic.plot+1],
              xlab="Sentences", ylab="Topic share", main="Donald J. Trump", "nomial Speeches")
 
-speech.df=tbl_df(corpus.list.df)%>%filter(File=="HillaryClinton", type=="nomin")%>%select(sent.id, Economy:Legislation)
+speech.df=tbl_df(corpus.list.df)%>%filter(File=="HillaryClinton", type=="nomin",Term=="1")%>%select(sent.id, Economy:Legislation)
 speech.df=as.matrix(speech.df)
 speech.df[,-1]=replace(speech.df[,-1], speech.df[,-1]<1/15, 0.001)
 speech.df[,-1]=f.smooth.topic(x=speech.df[,1], y=speech.df[,-1])
 plot.stacked(speech.df[,1], speech.df[,topic.plot+1],
              xlab="Sentences", ylab="Topic share", main="HillaryClinton", "nominal Speeches")
 ```
-
